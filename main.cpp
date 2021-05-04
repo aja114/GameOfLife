@@ -4,6 +4,7 @@
 #include <iostream>
 #include <unistd.h>
 #include <fstream>
+#include <string>
 
 using namespace std;
 
@@ -28,30 +29,51 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 }
 
+int load_board_size(ifstream& file_stream){
+  string line;
+  getline(file_stream, line);
+  int board_size = stoi(line);
+  return board_size;
+}
+
+int load_coord_size(ifstream& file_stream){
+  string line;
+  getline(file_stream, line);
+  int coord_size = stoi(line)-1;
+  return 2*coord_size;
+}
+
+void load_config(ifstream& file_stream, int* board_coord, int coord_size){
+    string line;
+    getline(file_stream, line);
+    for(int i=0; i<coord_size; i=i+2){
+        file_stream >> board_coord[i] >> board_coord[i+1];
+    }
+}
+
+bool file_exists (string name) {
+    ifstream f(name);
+    return f.good();
+}
+
 int main(){
 
-    int count = 0;
-    string line;
-    ifstream infile("config.txt");
-    getline(infile, line);
-    int board_size = stoi(line);
-
-    while (getline(infile, line)){
-        count++;
-    }
-    int board_coord[count*2];
-    ifstream infile1("config.txt");
-    getline(infile1, line);
-    for(int i=0; i<count*2; i=i+2){
-        infile1 >> board_coord[i] >> board_coord[i+1];
+    // Load the configuration file
+    string file;
+    cout << "Enter configuration file: \n";
+    getline(cin, file);
+    if (! file_exists(file)){
+      printf("File does not exist, using the default configuration\n");
+      file = "config.txt";
     }
 
-    // for(int i=0; i<count*2; i++){
-    //     printf("%i \n", board_coord[i]);
-    // }
+    ifstream infile(file);
+    int board_size = load_board_size(infile);
+    int coord_size = load_coord_size(infile);
+    int board_coord[coord_size];
+    load_config(infile, board_coord, coord_size);
 
-    int coord_size = sizeof(board_coord)/sizeof(*board_coord);
-
+    // Create game of life instance
     Gol game (board_size, coord_size, board_coord);
 
     // Initialise GLFW
@@ -68,14 +90,15 @@ int main(){
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE); // To make MacOS happy; should not be needed
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); // We don't want the old OpenGL
 
-    // Open a window and create its OpenGL context
-    GLFWwindow* window; // (In the accompanying source code, this variable is global for simplicity)
+    // Open a window using GLFW
+    GLFWwindow* window;
     window = glfwCreateWindow(512, 512, "Conway's Game of Life", NULL, NULL);
     if( window == NULL ){
         fprintf( stderr, "Failed to open GLFW window. If you have an Intel GPU, they are not 3.3 compatible. Try the 2.1 version of the tutorials.\n" );
         glfwTerminate();
         return -1;
     }
+    // Create its OpenGL context
     glfwMakeContextCurrent(window); // Initialize GLEW
     glewExperimental=true; // Needed in core profile
     if (glewInit() != GLEW_OK) {

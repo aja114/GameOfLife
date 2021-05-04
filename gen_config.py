@@ -1,4 +1,4 @@
-import random 
+import random
 board_size = random.randint(20, 100)
 min_alive = int(board_size**2/3)
 max_alive = int(board_size**2)
@@ -10,4 +10,5 @@ for j in range(num_alive):
 	alive.append(" ".join([r, c]))
 with open("config.txt", "w") as f:
 	f.write(str(board_size)+"\n")
+	f.write(str(num_alive)+"\n")
 	f.write("\n".join(alive))
