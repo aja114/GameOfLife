@@ -53,9 +53,6 @@ bool file_exists (string name) {
 }
 
 int main(){
-    char* vertex_shader = "shader/TransformVertexShader.vertexshader";
-    char* fragment_shader = "shader/ColorFragmentShader.fragmentshader";
-
     // Load the configuration file
     string file;
     cout << "Enter configuration file: \n";
@@ -112,12 +109,12 @@ int main(){
     glGenVertexArrays(1, &VertexArrayID);
     glBindVertexArray(VertexArrayID);
 
-    // An array of 3 vectors which represents 3 vertices
+    // Define the square position to fill the entire screen
     const int num_square = board_size*board_size;
     float square_size = 2.0/float(board_size);
     float square[num_square][4];
     for(int i=0; i<board_size; i++){
-        float x1 = -1+i*square_size;
+        float x1 = i*square_size-1;
         float x2 = x1+square_size;
         for(int j=0; j<board_size; j++){
             float y1 = 1-j*square_size;
@@ -129,13 +126,9 @@ int main(){
         }
     }
 
-    // for(int i=0; i<num_square; i++){
-    //     for(int j=0; j<4; j++){
-    //         printf("%f", square[i][j]);
-    //     }
-    //     printf("\n");
-    // }
-
+    // Map the square position to vertices
+    // Need 6 vertices for one square
+    // Each vertex has 3 position => 3*6 = 18 values
     GLfloat* g_vertex_buffer_data = new GLfloat[num_square*18];
 
     for(int i=0; i<num_square; i++){
@@ -164,30 +157,7 @@ int main(){
         g_vertex_buffer_data[18*i+17] = 0.0f;
     }
 
-    // static const GLfloat g_vertex_buffer_data[] = {
-    //     -1.0f, -1.0f, 0.0f,
-    //     -1.0f, 0.0f, 0.0f,
-    //     0.0f, -1.0f, 0.0f,
-    //     0.0f, -1.0f, 0.0f,
-    //     -1.0f, 0.0f, 0.0f,
-    //     0.0f, 0.0f, 0.0f,
-    // };
-
-    // static const GLfloat g_color_buffer_data1[] = {
-    //     1.0f, 0.0f, 0.0f,
-    //     1.0f, 0.0f, 0.0f,
-    //     1.0f, 0.0f, 0.0f,
-    //     0.0f, 1.0f, 0.0f,
-    //     0.0f, 1.0f, 0.0f,
-    //     0.0f, 1.0f, 0.0f,
-    //     1.0f, 0.0f, 0.0f,
-    //     1.0f, 0.0f, 0.0f,
-    //     1.0f, 0.0f, 0.0f,
-    //     0.0f, 1.0f, 0.0f,
-    //     0.0f, 1.0f, 0.0f,
-    //     0.0f, 1.0f, 0.0f
-    // };
-
+    // Color the squares with respect to the
     GLfloat* g_color_buffer_data = new GLfloat[num_square*18];
     for(int i=0; i<board_size; i++){
         for(int j=0; j<board_size; j++){
@@ -206,40 +176,30 @@ int main(){
         }
     }
 
-    // for(int i=0; i<num_square; i++){
-    //     printf("%f ", g_color_buffer_data[3*i]);
-    //     printf("%f ", g_color_buffer_data[3*i+1]);
-    //     printf("%f ", g_color_buffer_data[3*i+2]);
-    //     printf("\n");
-    // }
 
-
-    // This will identify our vertex buffer
+    // Define the vertex buffer and transfer data to OpenGL
     GLuint vertexbuffer;
-    // Generate 1 buffer, put the resulting identifier in vertexbuffer
     glGenBuffers(1, &vertexbuffer);
-    // The following commands will talk about our 'vertexbuffer' buffer
     glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-    // Give our vertices to OpenGL.
     glBufferData(GL_ARRAY_BUFFER, num_square*18*sizeof(g_vertex_buffer_data[0]), g_vertex_buffer_data, GL_STATIC_DRAW);
 
+    // Define the color buffer and transfer data to OpenGL
     GLuint colorbuffer;
     glGenBuffers(1, &colorbuffer);
     glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
     glBufferData(GL_ARRAY_BUFFER, num_square*18*sizeof(g_color_buffer_data[0]), g_color_buffer_data, GL_STATIC_DRAW);
 
     // Create and compile our GLSL program from the shaders
+    char* vertex_shader = "shader/TransformVertexShader.vertexshader";
+    char* fragment_shader = "shader/ColorFragmentShader.fragmentshader";
     GLuint programID = LoadShaders( vertex_shader , fragment_shader );
-    // GLuint programID = LoadShaders( "SimpleVertexShader.vertexshader", "SimpleFragmentShader.fragmentshader" );
-    int test_count = 0;
 
     do{
-        // Clear the screen. It's not mentioned before Tutorial 02, but it can cause flickering, so it's there nonetheless.
+        // Clear the screen
         glfwSetKeyCallback(window, key_callback);
-
-        // color the screen
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        // Update color buffer
         for(int i=0; i<board_size; i++){
             for(int j=0; j<board_size; j++){
                 float c;
@@ -256,13 +216,6 @@ int main(){
                 }
             }
         }
-
-        // for(int i=0; i<num_square; i++){
-        //     printf("%f ", g_color_buffer_data[3*i]);
-        //     printf("%f ", g_color_buffer_data[3*i+1]);
-        //     printf("%f ", g_color_buffer_data[3*i+2]);
-        //     printf("\n");
-        // }
 
         glBufferData(GL_ARRAY_BUFFER, num_square*18*sizeof(g_color_buffer_data[0]), g_color_buffer_data, GL_STATIC_DRAW);
 
@@ -294,7 +247,7 @@ int main(){
         );
 
         // Draw the triangle !
-        glDrawArrays(GL_TRIANGLES, 0, num_square*2*3); // Starting from vertex 0; 3 vertices total -> 1 triangle
+        glDrawArrays(GL_TRIANGLES, 0, num_square*2*3);
 
         glDisableVertexAttribArray(0);
         glDisableVertexAttribArray(1);
@@ -303,9 +256,8 @@ int main(){
         glfwSwapBuffers(window);
         glfwPollEvents();
 
+        // update the game
         game.update_boards();
-        // print_board(new_board, board_size);
-        //clearScreen();
         usleep(50000);
 
     } // Check if the ESC key was pressed or the window was closed
@@ -321,5 +273,3 @@ int main(){
 	// Close OpenGL window and terminate GLFW
 	glfwTerminate();
 }
-
-// g++ shader.cpp gltest.cpp -o gltest.o -framework OpenGL -lglfw -lGLEW
