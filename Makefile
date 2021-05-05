@@ -6,7 +6,7 @@ LDFLAGS=-L/usr/local/lib
 CPPFLAGS=-I/usr/local/include
 
 BIN=play.o
-SRCS=shader.cpp main.cpp
+SRCS=shader/shader.cpp main.cpp
 
 all: $(BIN)
 

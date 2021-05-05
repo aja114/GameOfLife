@@ -7,16 +7,12 @@
 #include <string>
 
 using namespace std;
-
 // Include GLEW. Always include it before gl.h and glfw3.h, since it's a bit magic.
 #include <GL/glew.h>
-
 // Include GLFW
 #include <GLFW/glfw3.h>
-
-#include "shader.hpp"
-
-#include "gol.cpp"
+#include "shader/shader.hpp"
+#include "gol/gol.cpp"
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
@@ -57,6 +53,8 @@ bool file_exists (string name) {
 }
 
 int main(){
+    char* vertex_shader = "shader/TransformVertexShader.vertexshader";
+    char* fragment_shader = "shader/ColorFragmentShader.fragmentshader";
 
     // Load the configuration file
     string file;
@@ -64,9 +62,8 @@ int main(){
     getline(cin, file);
     if (! file_exists(file)){
       printf("File does not exist, using the default configuration\n");
-      file = "config.txt";
+      file = "config/config.txt";
     }
-
     ifstream infile(file);
     int board_size = load_board_size(infile);
     int coord_size = load_coord_size(infile);
@@ -232,7 +229,7 @@ int main(){
     glBufferData(GL_ARRAY_BUFFER, num_square*18*sizeof(g_color_buffer_data[0]), g_color_buffer_data, GL_STATIC_DRAW);
 
     // Create and compile our GLSL program from the shaders
-    GLuint programID = LoadShaders( "TransformVertexShader.vertexshader", "ColorFragmentShader.fragmentshader" );
+    GLuint programID = LoadShaders( vertex_shader , fragment_shader );
     // GLuint programID = LoadShaders( "SimpleVertexShader.vertexshader", "SimpleFragmentShader.fragmentshader" );
     int test_count = 0;
 
